@@ -317,7 +317,7 @@ class abs_map_container {
     bool operator==(const map_iter::abs_map_container<T>& rhs) const {
       if (size() != rhs.size())
         return false;
-      for (auto i = begin(), rhsi = rhs.begin(); i != end(); ++i)
+      for (auto i = begin(), rhsi = rhs.begin(); i != end(); ++i, ++rhsi)
         if (*i != *rhsi)
           return false;
       return true;
