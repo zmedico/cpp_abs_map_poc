@@ -81,6 +81,14 @@ TEST_CASE( "all tests", "[all]" ) {
     e.clear();
     REQUIRE( a != e );
     REQUIRE( e != a );
+
+    map_container<int> f = a;
+    f.swap(e);
+    REQUIRE( e == a );
+    REQUIRE( f != a );
+    e.swap(f);
+    REQUIRE( f == a );
+    REQUIRE( e != a );
   }
 }
 

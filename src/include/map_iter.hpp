@@ -336,6 +336,7 @@ class abs_map_container {
       return *this;
     }
 
+    virtual void swap(abs_map_container<T>& other) = 0;
 };
 
 template<class T>

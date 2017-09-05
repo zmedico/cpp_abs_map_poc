@@ -39,6 +39,13 @@ class array_container : public map_iter::abs_map_container<T>
       return m == rhs.m;
     }
 
+    void swap(map_iter::abs_map_container<T>& other) {
+      array_container temp;
+      swap(temp);
+      *this = other;
+      other = temp;
+    }
+
     void swap(array_container& other) {
       m.swap(other.m);
     }
