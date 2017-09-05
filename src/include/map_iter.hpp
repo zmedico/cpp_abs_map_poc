@@ -1,6 +1,7 @@
 
 #include <iterator>
 #include <functional>
+#include <ostream>
 #include <utility>
 
 #ifndef POC_MAP_ITER_H
