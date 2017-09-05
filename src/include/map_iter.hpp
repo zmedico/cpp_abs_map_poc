@@ -23,8 +23,8 @@ struct base_iter_funcs {
    * appropriate.
    */
   std::function<std::pair<const Key, T>(void*)> deref;
-  std::function<T(const void*)> get_value;
-  std::function<Key(const void*)> get_key;
+  std::function<const T&(const void*)> get_value;
+  std::function<const Key&(const void*)> get_key;
 };
 
 template<class Key, class T, class Iter>
@@ -56,11 +56,11 @@ base_iter_funcs<Key,T> default_base_iter_funcs() {
       return *(*reinterpret_cast<Iter*>(iter));
     },
 
-    [](const void* iter) -> T {
+    [](const void* iter) -> const T& {
       return (*(*reinterpret_cast<const Iter*>(iter))).second;
     },
 
-    [](const void* iter) -> Key {
+    [](const void* iter) -> const Key& {
       return (*(*reinterpret_cast<const Iter*>(iter))).first;
     }
   };
