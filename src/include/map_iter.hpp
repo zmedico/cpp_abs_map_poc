@@ -338,6 +338,21 @@ class abs_map_container {
 
 };
 
+template<class T>
+inline std::ostream& operator<<(std::ostream& out, const abs_map_container<T> &s) {
+  out << "[";
+  const char *prequel = "";
+  for (typename abs_map_container<T>::const_iterator i = s.begin();
+       i != s.end();
+       ++i)
+  {
+    out << prequel << i.get_key() << "~" << i.get_value();
+    prequel = ",";
+  }
+  out << "]";
+  return out;
+}
+
 }
 
 #endif
