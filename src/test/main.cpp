@@ -72,6 +72,15 @@ TEST_CASE( "all tests", "[all]" ) {
     REQUIRE( *(--a.end()) == *(--b.end()) );
     REQUIRE( *(--a.end()) == foo );
     REQUIRE( (--(--a.end())).get_value() == 2 );
+
+    array_container<int> d = a;
+    REQUIRE( a == d );
+    array_container<int> e = std::move(d);
+    REQUIRE( a == e );
+    REQUIRE( e == a );
+    e.clear();
+    REQUIRE( a != e );
+    REQUIRE( e != a );
   }
 }
 
