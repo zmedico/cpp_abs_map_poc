@@ -106,6 +106,8 @@ class iterator: public std::iterator <
     std::forward_iterator_tag, std::pair<const Key, T>> {
 
   public:
+    iterator(): _iter(NULL), _funcs(NULL) {}
+
     template<class Iter>
     explicit iterator(const Iter& impl):
         _iter(reinterpret_cast<void*>(new Iter(impl))) {
@@ -116,20 +118,28 @@ class iterator: public std::iterator <
       _funcs = &def_funcs;
     }
 
-    iterator(const iterator& iter):
-        _iter(iter._funcs->base.copy(iter._iter)) {
+    iterator(const iterator& iter) {
+      if (iter._funcs != NULL)
+        _iter = iter._funcs->base.copy(iter._iter);
+      else
+        _iter = NULL;
       _funcs = iter._funcs;
     }
 
     iterator &operator=(const iterator &iter) {
-      _funcs->base.del(_iter);
+      if (_funcs != NULL)
+        _funcs->base.del(_iter);
       _funcs = iter._funcs;
-      _iter = _funcs->base.copy(iter._iter);
+      if (_funcs != NULL)
+        _iter = _funcs->base.copy(iter._iter);
+      else
+        _iter = NULL;
       return *this;
     }
 
     ~iterator() {
-      _funcs->base.del(_iter);
+      if (_funcs != NULL)
+        _funcs->base.del(_iter);
     }
 
     bool operator==(const iterator<Key,T>& rhs) const {
@@ -204,6 +214,8 @@ class const_iterator:
         std::forward_iterator_tag, std::pair<const Key, T>> {
 
   public:
+    const_iterator(): _iter(NULL), _funcs(NULL) {}
+
     /*
      * Not explicit, allowing a mutable impl to be wrapped, so that
      * const_iterator is interoperable begin/end in addition to
@@ -219,20 +231,28 @@ class const_iterator:
       _funcs = &def_funcs;
     }
 
-    const_iterator(const const_iterator& iter) :
-        _iter(iter._funcs->base.copy(iter._iter)) {
+    const_iterator(const const_iterator& iter) {
+      if (iter._funcs != NULL)
+        _iter = iter._funcs->base.copy(iter._iter);
+      else
+        _iter = NULL;
       _funcs = iter._funcs;
     }
 
     const_iterator &operator=(const const_iterator &iter) {
-      _funcs->base.del(_iter);
+      if (_funcs != NULL)
+        _funcs->base.del(_iter);
       _funcs = iter._funcs;
-      _iter = _funcs->base.copy(iter._iter);
+      if (_funcs != NULL)
+        _iter = _funcs->base.copy(iter._iter);
+      else
+        _iter = NULL;
       return *this;
     }
 
     ~const_iterator() {
-      _funcs->base.del(_iter);
+      if (_funcs != NULL)
+        _funcs->base.del(_iter);
     }
 
     bool operator==(const const_iterator<Key,T>& rhs) const {
