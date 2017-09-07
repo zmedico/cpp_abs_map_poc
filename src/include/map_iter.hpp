@@ -1,6 +1,5 @@
 
 #include <iterator>
-#include <functional>
 #include <ostream>
 #include <utility>
 
@@ -9,13 +8,63 @@
 
 namespace map_iter {
 
+namespace wrappers {
+
+  template<class Iter>
+  void* copy(const void* iter) {
+    return reinterpret_cast<void*>(new Iter(
+        *reinterpret_cast<const Iter*>(iter)));
+  }
+
+  template<class Iter>
+  void del (void* iter) {
+    delete reinterpret_cast<Iter*>(iter);
+  }
+
+  template<class Iter>
+  bool eq(const void* iter, const void* rhs) {
+    return *reinterpret_cast<const Iter*>(iter) ==
+        *reinterpret_cast<const Iter*>(rhs);
+  }
+
+  template<class Iter>
+  void inc(void* iter) {
+    ++(*reinterpret_cast<Iter*>(iter));
+  }
+
+  template<class Iter>
+  void dec(void* iter) {
+    --(*reinterpret_cast<Iter*>(iter));
+  }
+
+  template<class Key, class T, class Iter>
+  std::pair<const Key, T> deref(const void* iter) {
+    return *(*reinterpret_cast<const Iter*>(iter));
+  }
+
+  template<class T, class Iter>
+  T get_value(const void* iter) {
+    return (*(*reinterpret_cast<const Iter*>(iter))).second;
+  }
+
+  template<class Key, class Iter>
+  Key get_key(const void* iter) {
+    return (*(*reinterpret_cast<const Iter*>(iter))).first;
+  }
+
+  template<class T, class Iter>
+  void set_value(void* iter, const T& value) {
+    (*reinterpret_cast<Iter*>(iter))->second = value;
+  }
+}
+
 template<class Key, class T>
 struct base_iter_funcs {
-  std::function<void*(const void*)> copy;
-  std::function<void(void*)> del;
-  std::function<bool(const void*, const void*)> eq;
-  std::function<void(void*)> inc;
-  std::function<void(void*)> dec;
+  void* (*copy)(const void*);
+  void (*del)(void*);
+  bool (*eq)(const void*, const void*);
+  void (*inc)(void*);
+  void (*dec)(void*);
   /*
    * Dereference is return by value, in order to hide differences
    * between pair<const T,T> used by map and pair<T,T> used by
@@ -23,47 +72,22 @@ struct base_iter_funcs {
    * members). Compiler RVO will optimize away unecessary copies when
    * appropriate.
    */
-  std::function<std::pair<const Key, T>(void*)> deref;
-  std::function<T(const void*)> get_value;
-  std::function<Key(const void*)> get_key;
+  std::pair<const Key, T>(*deref)(const void*);
+  T(*get_value)(const void*);
+  T(*get_key)(const void*);
 };
 
 template<class Key, class T, class Iter>
 base_iter_funcs<Key,T> default_base_iter_funcs() {
   base_iter_funcs<Key,T> funcs{
-    [](const void* iter) -> void* {
-        return reinterpret_cast<void*>(new Iter(
-            *reinterpret_cast<const Iter*>(iter)));
-    },
-
-    [](void* iter) {
-      delete reinterpret_cast<Iter*>(iter);
-    },
-
-    [](const void* iter, const void* rhs) -> bool {
-      return *reinterpret_cast<const Iter*>(iter) ==
-          *reinterpret_cast<const Iter*>(rhs);
-    },
-
-    [](void* iter) {
-      ++(*reinterpret_cast<Iter*>(iter));
-    },
-
-    [](void* iter) {
-      --(*reinterpret_cast<Iter*>(iter));
-    },
-
-    [](void* iter) -> std::pair<const Key, T> {
-      return *(*reinterpret_cast<Iter*>(iter));
-    },
-
-    [](const void* iter) -> T {
-      return (*(*reinterpret_cast<const Iter*>(iter))).second;
-    },
-
-    [](const void* iter) -> Key {
-      return (*(*reinterpret_cast<const Iter*>(iter))).first;
-    }
+    wrappers::copy<Iter>,
+    wrappers::del<Iter>,
+    wrappers::eq<Iter>,
+    wrappers::inc<Iter>,
+    wrappers::dec<Iter>,
+    wrappers::deref<Key,T,Iter>,
+    wrappers::get_value<T,Iter>,
+    wrappers::get_key<Key,Iter>
   };
   return funcs;
 }
@@ -72,17 +96,14 @@ base_iter_funcs<Key,T> default_base_iter_funcs() {
 template<class Key, class T>
 struct mut_iter_funcs {
   base_iter_funcs<Key,T> base;
-  std::function<void(void*, const T&)> set_value;
+  void (*set_value)(void*, const T&);
 };
 
 template<class Key, class T, class Iter>
 mut_iter_funcs<Key,T> default_mut_iter_funcs() {
   mut_iter_funcs<Key,T> funcs{
     default_base_iter_funcs<Key,T,Iter>(),
-
-    [](void* iter, const T& value) {
-      (*reinterpret_cast<Iter*>(iter))->second = value;
-    }
+    wrappers::set_value<T,Iter>
   };
   return funcs;
 }
