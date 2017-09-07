@@ -11,49 +11,49 @@ namespace map_iter {
 namespace wrappers {
 
   template<class Iter>
-  void* copy(const void* iter) {
+  inline void* copy(const void* iter) {
     return reinterpret_cast<void*>(new Iter(
         *reinterpret_cast<const Iter*>(iter)));
   }
 
   template<class Iter>
-  void del (void* iter) {
+  inline void del (void* iter) {
     delete reinterpret_cast<Iter*>(iter);
   }
 
   template<class Iter>
-  bool eq(const void* iter, const void* rhs) {
+  inline bool eq(const void* iter, const void* rhs) {
     return *reinterpret_cast<const Iter*>(iter) ==
         *reinterpret_cast<const Iter*>(rhs);
   }
 
   template<class Iter>
-  void inc(void* iter) {
+  inline void inc(void* iter) {
     ++(*reinterpret_cast<Iter*>(iter));
   }
 
   template<class Iter>
-  void dec(void* iter) {
+  inline void dec(void* iter) {
     --(*reinterpret_cast<Iter*>(iter));
   }
 
   template<class Key, class T, class Iter>
-  std::pair<const Key, T> deref(const void* iter) {
+  inline std::pair<const Key, T> deref(const void* iter) {
     return *(*reinterpret_cast<const Iter*>(iter));
   }
 
   template<class T, class Iter>
-  T get_value(const void* iter) {
+  inline T get_value(const void* iter) {
     return (*(*reinterpret_cast<const Iter*>(iter))).second;
   }
 
   template<class Key, class Iter>
-  Key get_key(const void* iter) {
+  inline Key get_key(const void* iter) {
     return (*(*reinterpret_cast<const Iter*>(iter))).first;
   }
 
   template<class T, class Iter>
-  void set_value(void* iter, const T& value) {
+  inline void set_value(void* iter, const T& value) {
     (*reinterpret_cast<Iter*>(iter))->second = value;
   }
 }
