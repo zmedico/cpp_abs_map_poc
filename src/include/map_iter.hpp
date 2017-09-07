@@ -142,11 +142,11 @@ class iterator: public std::iterator <
         _funcs->base.del(_iter);
     }
 
-    bool operator==(const iterator<Key,T>& rhs) const {
+    bool operator==(const iterator& rhs) const {
       return _funcs->base.eq(_iter, rhs._iter);
     }
 
-    bool operator!=(const iterator<Key,T>& rhs) const {
+    bool operator!=(const iterator& rhs) const {
       return !_funcs->base.eq(_iter, rhs._iter);
     }
 
@@ -176,24 +176,24 @@ class iterator: public std::iterator <
       _funcs->set_value(_iter, value);
     }
 
-    iterator<Key,T> &operator++() {
+    iterator &operator++() {
       _funcs->base.inc(_iter);
       return *this;
     }
 
-    iterator<Key,T> operator++(int) {
-      iterator<Key,T> prev(*this);
+    iterator operator++(int) {
+      iterator prev(*this);
       _funcs->base.inc(_iter);
       return prev;
     }
 
-    iterator<Key,T> &operator--() {
+    iterator &operator--() {
       _funcs->base.dec(_iter);
       return *this;
     }
 
-    iterator<Key,T> operator--(int) {
-      iterator<Key,T> prev(*this);
+    iterator operator--(int) {
+      iterator prev(*this);
       _funcs->base.dec(_iter);
       return prev;
     }
@@ -255,11 +255,11 @@ class const_iterator:
         _funcs->base.del(_iter);
     }
 
-    bool operator==(const const_iterator<Key,T>& rhs) const {
+    bool operator==(const const_iterator& rhs) const {
       return _funcs->base.eq(_iter, rhs._iter);
     }
 
-    bool operator!=(const const_iterator<Key,T>& rhs) const {
+    bool operator!=(const const_iterator& rhs) const {
       return !_funcs->base.eq(_iter, rhs._iter);
     }
 
@@ -285,24 +285,24 @@ class const_iterator:
       return _funcs->base.get_value(_iter);
     }
 
-    const_iterator<Key,T> &operator++() {
+    const_iterator &operator++() {
       _funcs->base.inc(_iter);
       return *this;
     }
 
-    const_iterator<Key,T> operator++(int) {
-      const_iterator<Key,T> prev(*this);
+    const_iterator operator++(int) {
+      const_iterator prev(*this);
       _funcs->base.inc(_iter);
       return prev;
     }
 
-    const_iterator<Key,T> &operator--() {
+    const_iterator &operator--() {
       _funcs->base.dec(_iter);
       return *this;
     }
 
-    const_iterator<Key,T> operator--(int) {
-      const_iterator<Key,T> prev(*this);
+    const_iterator operator--(int) {
+      const_iterator prev(*this);
       _funcs->base.dec(_iter);
       return prev;
     }
