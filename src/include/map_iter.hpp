@@ -356,7 +356,7 @@ class abs_map_container {
     virtual typename abs_map_container::const_iterator begin() const = 0;
     virtual typename abs_map_container::const_iterator end() const = 0;
 
-    bool operator==(const map_iter::abs_map_container<T>& rhs) const {
+    bool operator==(const abs_map_container& rhs) const {
       if (size() != rhs.size())
         return false;
       for (auto i = begin(), rhsi = rhs.begin(); i != end(); ++i, ++rhsi)
@@ -365,7 +365,7 @@ class abs_map_container {
       return true;
     }
 
-    bool operator!=(const map_iter::abs_map_container<T>& rhs) const {
+    bool operator!=(const abs_map_container& rhs) const {
       return !(*this == rhs);
     }
 
@@ -378,7 +378,7 @@ class abs_map_container {
       return *this;
     }
 
-    virtual void swap(abs_map_container<T>& other) = 0;
+    virtual void swap(abs_map_container& other) = 0;
 };
 
 template<class T>
