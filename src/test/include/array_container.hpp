@@ -19,6 +19,10 @@ class array_container : public map_iter::abs_map_container<T>
     typedef map_iter::const_iterator<T,T> const_iterator;
     using map_iter::abs_map_container<T>::operator=;
 
+    static bool value_compare(const value_type& lhs, const value_type& rhs) {
+      return lhs.first < rhs.first;
+    }
+
     array_container(): m(){
     }
 
@@ -58,9 +62,9 @@ class array_container : public map_iter::abs_map_container<T>
        * store elements containing const members
        */
       std::pair<T,T> conv_value = value;
-      typename decltype(m)::iterator p = std::lower_bound(
+      typename decltype(m)::iterator p = std::upper_bound(
           *reinterpret_cast<const typename decltype(m)::iterator*>(
-          mi.get_impl()), m.end(), conv_value);
+          mi.get_impl()), m.end(), conv_value, value_compare);
       return typename array_container::iterator(
           m.emplace(p, std::move(conv_value)));
     }
