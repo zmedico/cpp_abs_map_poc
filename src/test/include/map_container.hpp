@@ -16,6 +16,7 @@ class map_container : public map_iter::abs_map_container<T>
     typedef map_iter::iterator<T,T> iterator;
     typedef map_iter::const_iterator<T,T> const_iterator;
     using map_iter::abs_map_container<T>::operator=;
+    using map_iter::abs_map_container<T>::operator==;
 
     map_container(): map_iter::abs_map_container<T>(), m(){
     }

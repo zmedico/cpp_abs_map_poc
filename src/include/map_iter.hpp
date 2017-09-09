@@ -356,16 +356,41 @@ class abs_map_container {
     virtual typename abs_map_container::const_iterator begin() const = 0;
     virtual typename abs_map_container::const_iterator end() const = 0;
 
+    /*
+     * Allow comparison of pair<const T, T> with pair<T, T>, since
+     * vector does not allow allow elements with const members.
+     */
+    template <class ValueTypeA, class ValueTypeB>
+    static bool item_equiv(const ValueTypeA& lhs, const ValueTypeB& rhs) {
+      return lhs.first == rhs.first && lhs.second == rhs.second;
+    }
+
     bool operator==(const abs_map_container& rhs) const {
       if (size() != rhs.size())
         return false;
       for (auto i = begin(), rhsi = rhs.begin(); i != end(); ++i, ++rhsi)
-        if (*i != *rhsi)
+        if (!item_equiv(*i, *rhsi))
           return false;
       return true;
     }
 
     bool operator!=(const abs_map_container& rhs) const {
+      return !(*this == rhs);
+    }
+
+    template <class Container>
+    bool operator==(const Container& rhs) const {
+      if (size() != rhs.size())
+        return false;
+      auto rhsi = rhs.begin();
+      for (auto i = begin(); i != end(); ++i, ++rhsi)
+        if (!item_equiv(*i, *rhsi))
+          return false;
+      return true;
+    }
+
+    template <class Container>
+    bool operator!=(const Container& rhs) const {
       return !(*this == rhs);
     }
 
