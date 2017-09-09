@@ -65,7 +65,7 @@ namespace wrappers {
 }
 
 template<class Key, class T>
-struct base_iter_funcs {
+struct iter_funcs {
   void* (*copy)(const void*);
   void (*assign)(void*, const void*);
   void (*del)(void*);
@@ -82,11 +82,12 @@ struct base_iter_funcs {
   std::pair<const Key, T>(*deref)(const void*);
   T(*get_value)(const void*);
   T(*get_key)(const void*);
+  void (*set_value)(void*, const T&);
 };
 
 template<class Key, class T, class Iter>
-base_iter_funcs<Key,T> default_base_iter_funcs() {
-  base_iter_funcs<Key,T> funcs{
+iter_funcs<Key,T>* mut_iter_funcs() {
+  static iter_funcs<Key,T> funcs{
     wrappers::copy<Iter>,
     wrappers::assign<Iter>,
     wrappers::del<Iter>,
@@ -95,39 +96,27 @@ base_iter_funcs<Key,T> default_base_iter_funcs() {
     wrappers::dec<Iter>,
     wrappers::deref<Key,T,Iter>,
     wrappers::get_value<T,Iter>,
-    wrappers::get_key<Key,Iter>
-  };
-  return funcs;
-}
-
-
-template<class Key, class T>
-struct mut_iter_funcs {
-  base_iter_funcs<Key,T> base;
-  void (*set_value)(void*, const T&);
-};
-
-template<class Key, class T, class Iter>
-mut_iter_funcs<Key,T> default_mut_iter_funcs() {
-  mut_iter_funcs<Key,T> funcs{
-    default_base_iter_funcs<Key,T,Iter>(),
+    wrappers::get_key<Key,Iter>,
     wrappers::set_value<T,Iter>
   };
-  return funcs;
+  return &funcs;
 }
 
-
-template<class Key, class T>
-struct const_iter_funcs {
-  base_iter_funcs<Key,T> base;
-};
-
 template<class Key, class T, class Iter>
-const_iter_funcs<Key,T> default_const_iter_funcs() {
-  const_iter_funcs<Key,T> funcs{
-    default_base_iter_funcs<Key,T,Iter>(),
+iter_funcs<Key,T>* const_iter_funcs() {
+  static iter_funcs<Key,T> funcs{
+    wrappers::copy<Iter>,
+    wrappers::assign<Iter>,
+    wrappers::del<Iter>,
+    wrappers::eq<Iter>,
+    wrappers::inc<Iter>,
+    wrappers::dec<Iter>,
+    wrappers::deref<Key,T,Iter>,
+    wrappers::get_value<T,Iter>,
+    wrappers::get_key<Key,Iter>,
+    NULL
   };
-  return funcs;
+  return &funcs;
 }
 
 template<class Key, class T>
@@ -139,17 +128,12 @@ class iterator: public std::iterator <
 
     template<class Iter>
     explicit iterator(const Iter& impl):
-        _iter(reinterpret_cast<void*>(new Iter(impl))) {
-
-      static mut_iter_funcs<Key,T> def_funcs =
-          default_mut_iter_funcs<Key,T,Iter>();
-
-      _funcs = &def_funcs;
-    }
+        _iter(reinterpret_cast<void*>(new Iter(impl))),
+        _funcs(mut_iter_funcs<Key,T,Iter>()) {}
 
     iterator(const iterator& iter) {
       if (iter._funcs != NULL)
-        _iter = iter._funcs->base.copy(iter._iter);
+        _iter = iter._funcs->copy(iter._iter);
       else
         _iter = NULL;
       _funcs = iter._funcs;
@@ -158,13 +142,13 @@ class iterator: public std::iterator <
     iterator &operator=(const iterator &iter) {
       if (_funcs != NULL)
         if (iter._funcs == _funcs) {
-          _funcs->base.assign(_iter, iter._iter);
+          _funcs->assign(_iter, iter._iter);
           return *this;
         } else
-          _funcs->base.del(_iter);
+          _funcs->del(_iter);
       _funcs = iter._funcs;
       if (_funcs != NULL)
-        _iter = _funcs->base.copy(iter._iter);
+        _iter = _funcs->copy(iter._iter);
       else
         _iter = NULL;
       return *this;
@@ -173,25 +157,25 @@ class iterator: public std::iterator <
     template<class Iter>
     iterator &operator=(const Iter &iter) {
       assert(_funcs != NULL);
-      _funcs->base.assign(_iter, &iter);
+      _funcs->assign(_iter, &iter);
       return *this;
     }
 
     ~iterator() {
       if (_funcs != NULL)
-        _funcs->base.del(_iter);
+        _funcs->del(_iter);
     }
 
     bool operator==(const iterator& rhs) const {
-      return _funcs->base.eq(_iter, rhs._iter);
+      return _funcs->eq(_iter, rhs._iter);
     }
 
     bool operator!=(const iterator& rhs) const {
-      return !_funcs->base.eq(_iter, rhs._iter);
+      return !_funcs->eq(_iter, rhs._iter);
     }
 
     std::pair<const Key, T> operator*() const {
-      return _funcs->base.deref(_iter);
+      return _funcs->deref(_iter);
     }
 
    /*
@@ -200,16 +184,16 @@ class iterator: public std::iterator <
     */
    /*
     std::pair<const Key, T> *operator->() {
-      return &(_funcs->base.deref(_iter));
+      return &(_funcs->deref(_iter));
     }
     */
 
     Key get_key() const {
-      return _funcs->base.get_key(_iter);
+      return _funcs->get_key(_iter);
     }
 
     T get_value() const {
-      return _funcs->base.get_value(_iter);
+      return _funcs->get_value(_iter);
     }
 
     void set_value(T value) {
@@ -217,24 +201,24 @@ class iterator: public std::iterator <
     }
 
     iterator &operator++() {
-      _funcs->base.inc(_iter);
+      _funcs->inc(_iter);
       return *this;
     }
 
     iterator operator++(int) {
       iterator prev(*this);
-      _funcs->base.inc(_iter);
+      _funcs->inc(_iter);
       return prev;
     }
 
     iterator &operator--() {
-      _funcs->base.dec(_iter);
+      _funcs->dec(_iter);
       return *this;
     }
 
     iterator operator--(int) {
       iterator prev(*this);
-      _funcs->base.dec(_iter);
+      _funcs->dec(_iter);
       return prev;
     }
 
@@ -244,7 +228,7 @@ class iterator: public std::iterator <
 
   private:
 		void *_iter;
-    mut_iter_funcs<Key,T>* _funcs;
+    iter_funcs<Key,T>* _funcs;
 };
 
 
@@ -263,17 +247,12 @@ class const_iterator:
      */
     template<class Iter>
     const_iterator(const Iter& impl):
-        _iter(reinterpret_cast<void*>(new Iter(impl))) {
-
-      static const_iter_funcs<Key,T> def_funcs =
-          default_const_iter_funcs<Key,T,Iter>();
-
-      _funcs = &def_funcs;
-    }
+        _iter(reinterpret_cast<void*>(new Iter(impl))),
+        _funcs(const_iter_funcs<Key,T,Iter>()) {}
 
     const_iterator(const const_iterator& iter) {
       if (iter._funcs != NULL)
-        _iter = iter._funcs->base.copy(iter._iter);
+        _iter = iter._funcs->copy(iter._iter);
       else
         _iter = NULL;
       _funcs = iter._funcs;
@@ -281,10 +260,10 @@ class const_iterator:
 
     const_iterator &operator=(const const_iterator &iter) {
       if (_funcs != NULL)
-        _funcs->base.del(_iter);
+        _funcs->del(_iter);
       _funcs = iter._funcs;
       if (_funcs != NULL)
-        _iter = _funcs->base.copy(iter._iter);
+        _iter = _funcs->copy(iter._iter);
       else
         _iter = NULL;
       return *this;
@@ -292,19 +271,19 @@ class const_iterator:
 
     ~const_iterator() {
       if (_funcs != NULL)
-        _funcs->base.del(_iter);
+        _funcs->del(_iter);
     }
 
     bool operator==(const const_iterator& rhs) const {
-      return _funcs->base.eq(_iter, rhs._iter);
+      return _funcs->eq(_iter, rhs._iter);
     }
 
     bool operator!=(const const_iterator& rhs) const {
-      return !_funcs->base.eq(_iter, rhs._iter);
+      return !_funcs->eq(_iter, rhs._iter);
     }
 
     const std::pair<const Key, T> operator*() const {
-      return _funcs->base.deref(_iter);
+      return _funcs->deref(_iter);
     }
 
    /*
@@ -313,37 +292,37 @@ class const_iterator:
     */
    /*
     std::pair<const Key, T> *operator->() {
-      return &(_funcs->base.deref(_iter));
+      return &(_funcs->deref(_iter));
     }
     */
 
     Key get_key() const {
-      return _funcs->base.get_key(_iter);
+      return _funcs->get_key(_iter);
     }
 
     T get_value() const {
-      return _funcs->base.get_value(_iter);
+      return _funcs->get_value(_iter);
     }
 
     const_iterator &operator++() {
-      _funcs->base.inc(_iter);
+      _funcs->inc(_iter);
       return *this;
     }
 
     const_iterator operator++(int) {
       const_iterator prev(*this);
-      _funcs->base.inc(_iter);
+      _funcs->inc(_iter);
       return prev;
     }
 
     const_iterator &operator--() {
-      _funcs->base.dec(_iter);
+      _funcs->dec(_iter);
       return *this;
     }
 
     const_iterator operator--(int) {
       const_iterator prev(*this);
-      _funcs->base.dec(_iter);
+      _funcs->dec(_iter);
       return prev;
     }
 
@@ -352,8 +331,8 @@ class const_iterator:
     }
 
   private:
-		void *_iter;
-    const_iter_funcs<Key,T>* _funcs;
+    void *_iter;
+    iter_funcs<Key,T>* _funcs;
 };
 
 template<class T>
