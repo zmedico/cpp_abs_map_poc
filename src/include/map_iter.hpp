@@ -2,6 +2,7 @@
 #include <iterator>
 #include <ostream>
 #include <utility>
+#include <cassert>
 
 #ifndef POC_MAP_ITER_H
 #define POC_MAP_ITER_H
@@ -166,6 +167,13 @@ class iterator: public std::iterator <
         _iter = _funcs->base.copy(iter._iter);
       else
         _iter = NULL;
+      return *this;
+    }
+
+    template<class Iter>
+    iterator &operator=(const Iter &iter) {
+      assert(_funcs != NULL);
+      _funcs->base.assign(_iter, &iter);
       return *this;
     }
 
@@ -356,8 +364,12 @@ class abs_map_container {
     typedef map_iter::iterator<T,T> iterator;
     typedef map_iter::const_iterator<T,T> const_iterator;
 
-    virtual typename abs_map_container::iterator insert(
-        const typename abs_map_container::iterator&,
+    /*
+     * This uses a mutable iterator reference in order to
+     * avoid unecessary copying (with heap allocation).
+     */
+    virtual void insert(
+        typename abs_map_container::iterator&,
         const typename abs_map_container::value_type&) = 0;
 
     virtual std::size_t size() const = 0;
@@ -400,7 +412,7 @@ class abs_map_container {
       auto rhs_end = rhs.get_raw_data().end();
       iterator i = begin();
       for (auto rhsi = rhs.get_raw_data().begin(); rhsi != rhs_end; ++rhsi)
-        i = insert(i, *rhsi);
+        insert(i, *rhsi);
       return *this;
     }
 

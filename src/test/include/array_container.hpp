@@ -56,8 +56,8 @@ class array_container : public map_iter::abs_map_container<T>
       m.swap(other.m);
     }
 
-    virtual typename array_container::iterator insert(
-        const typename array_container::iterator &mi,
+    virtual void insert(
+        typename array_container::iterator &mi,
         const typename array_container::value_type &value) {
       /*
        * convert from pair<const T,T> because vector cannot
@@ -67,8 +67,7 @@ class array_container : public map_iter::abs_map_container<T>
       typename decltype(m)::iterator p = std::upper_bound(
           *reinterpret_cast<const typename decltype(m)::iterator*>(
           mi.get_impl()), m.end(), conv_value, value_compare);
-      return typename array_container::iterator(
-          m.emplace(p, std::move(conv_value)));
+      mi = m.emplace(p, std::move(conv_value));
     }
 
     typename array_container::iterator begin() {

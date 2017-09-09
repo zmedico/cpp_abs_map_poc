@@ -50,12 +50,12 @@ class map_container : public map_iter::abs_map_container<T>
       m.swap(other.m);
     }
 
-    virtual typename map_container::iterator insert(
-        const typename map_container::iterator &mi,
+    virtual void insert(
+        typename map_container::iterator &mi,
         const typename map_container::value_type &value) {
-      return typename map_container::iterator(m.insert(
+      mi = m.insert(
           *reinterpret_cast<const typename decltype(m)::iterator*>(
-          mi.get_impl()), value));
+          mi.get_impl()), value);
     }
 
     typename map_container::iterator begin() {

@@ -15,7 +15,7 @@ void abs_mut_operation(map_iter::abs_map_container<int> &a,
   auto mi = a.begin();
   for (int i = 0; i < 3; ++i) {
     std::pair<const int, int> value{i, 1};
-    mi = a.insert(mi, value);
+    a.insert(mi, value);
   }
 
   for (auto i = a.begin(); i != a.end(); ++i) {
@@ -23,7 +23,7 @@ void abs_mut_operation(map_iter::abs_map_container<int> &a,
   }
 
   for (auto i = b.begin(); i != b.end(); ++i) {
-    mi = a.insert(mi, *i);
+    a.insert(mi, *i);
   }
 }
 
@@ -45,7 +45,8 @@ TEST_CASE( "all tests", "[all]" ) {
 
   SECTION( "section 1" ) {
     REQUIRE( a == b );
-    a.insert(a.begin(), foo);
+    typename map_container<int>::iterator ai = a.begin();
+    a.insert(ai, foo);
     REQUIRE( a != b );
 
     b = a;
@@ -64,7 +65,8 @@ TEST_CASE( "all tests", "[all]" ) {
   }
 
   SECTION( "section 2" ) {
-    b.insert(b.begin(), foo);
+    typename array_container<int>::iterator bi = b.begin();
+    b.insert(bi, foo);
     abs_mut_operation(a, b);
     abs_const_operation(a);
     abs_const_operation(b);
