@@ -17,6 +17,11 @@ namespace wrappers {
   }
 
   template<class Iter>
+  inline void assign(void* lhs, const void* rhs) {
+    *reinterpret_cast<Iter*>(lhs) = *reinterpret_cast<const Iter*>(rhs);
+  }
+
+  template<class Iter>
   inline void del (void* iter) {
     delete reinterpret_cast<Iter*>(iter);
   }
@@ -61,6 +66,7 @@ namespace wrappers {
 template<class Key, class T>
 struct base_iter_funcs {
   void* (*copy)(const void*);
+  void (*assign)(void*, const void*);
   void (*del)(void*);
   bool (*eq)(const void*, const void*);
   void (*inc)(void*);
@@ -81,6 +87,7 @@ template<class Key, class T, class Iter>
 base_iter_funcs<Key,T> default_base_iter_funcs() {
   base_iter_funcs<Key,T> funcs{
     wrappers::copy<Iter>,
+    wrappers::assign<Iter>,
     wrappers::del<Iter>,
     wrappers::eq<Iter>,
     wrappers::inc<Iter>,
@@ -149,7 +156,11 @@ class iterator: public std::iterator <
 
     iterator &operator=(const iterator &iter) {
       if (_funcs != NULL)
-        _funcs->base.del(_iter);
+        if (iter._funcs == _funcs) {
+          _funcs->base.assign(_iter, iter._iter);
+          return *this;
+        } else
+          _funcs->base.del(_iter);
       _funcs = iter._funcs;
       if (_funcs != NULL)
         _iter = _funcs->base.copy(iter._iter);
