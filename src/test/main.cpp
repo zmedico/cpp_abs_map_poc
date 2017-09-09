@@ -91,22 +91,6 @@ TEST_CASE( "all tests", "[all]" ) {
     e.swap(f);
     REQUIRE( f == a );
     REQUIRE( e != a );
-
-    std::map<int,int> m;
-    std::vector<std::pair<int,int>> v;
-    for (typename decltype(a)::const_iterator i = a.begin(); i != a.end(); ++i) {
-      m[i.get_key()] = i.get_value();
-      v.push_back({i.get_key(), i.get_value()});
-    }
-
-    REQUIRE( a == m );
-    REQUIRE( a == v );
-    b = a;
-    REQUIRE( b == m );
-    REQUIRE( b == v );
-
-    REQUIRE( e != m );
-    REQUIRE( e != v );
   }
 }
 

@@ -376,25 +376,14 @@ class abs_map_container {
       return lhs.first == rhs.first && lhs.second == rhs.second;
     }
 
-    bool operator==(const abs_map_container& rhs) const {
-      if (size() != rhs.size())
-        return false;
-      for (auto i = begin(), rhsi = rhs.begin(); i != end(); ++i, ++rhsi)
-        if (!item_equiv(*i, *rhsi))
-          return false;
-      return true;
-    }
-
-    bool operator!=(const abs_map_container& rhs) const {
-      return !(*this == rhs);
-    }
-
     template <class Container>
     bool operator==(const Container& rhs) const {
       if (size() != rhs.size())
         return false;
-      auto rhsi = rhs.begin();
-      for (auto i = begin(); i != end(); ++i, ++rhsi)
+      auto rhsi = rhs.get_raw_data().begin();
+      auto rhs_end = rhs.get_raw_data().end();
+      auto i_end = end();
+      for (auto i = begin(); i != i_end; ++i, ++rhsi)
         if (!item_equiv(*i, *rhsi))
           return false;
       return true;
@@ -405,12 +394,13 @@ class abs_map_container {
       return !(*this == rhs);
     }
 
-    abs_map_container& operator=(const abs_map_container& rhs) {
+    template <class Container>
+    abs_map_container& operator=(const Container& rhs) {
       clear();
+      auto rhs_end = rhs.get_raw_data().end();
       iterator i = begin();
-      for (const_iterator rhsi = rhs.begin(); rhsi != rhs.end(); ++rhsi) {
+      for (auto rhsi = rhs.get_raw_data().begin(); rhsi != rhs_end; ++rhsi)
         i = insert(i, *rhsi);
-      }
       return *this;
     }
 

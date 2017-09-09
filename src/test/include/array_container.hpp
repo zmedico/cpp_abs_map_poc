@@ -27,7 +27,8 @@ class array_container : public map_iter::abs_map_container<T>
     array_container(): m(){
     }
 
-    array_container(const typename map_iter::abs_map_container<T>& rhs):
+    template <class Container>
+    array_container(const Container& rhs):
         m() {
       *this = rhs;
     }
@@ -84,6 +85,22 @@ class array_container : public map_iter::abs_map_container<T>
 
     typename array_container::const_iterator end() const {
       return typename array_container::const_iterator(m.cend());
+    }
+
+  // base class calls get_raw_data in operator=
+  friend class map_iter::abs_map_container<T>;
+
+  protected:
+    /*
+     * Allows template methods to access the underlying
+     * iterator type, for maximum performance.
+     */
+    std::vector<std::pair<T,T>>& get_raw_data() {
+      return m;
+    }
+
+    const std::vector<std::pair<T,T>>& get_raw_data() const {
+      return m;
     }
 
   private:
